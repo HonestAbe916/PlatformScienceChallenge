@@ -1,9 +1,9 @@
 const fs = require("fs");
 
-const readInput = (inputPath) => {
-  const input = fs.readFileSync(inputPath, "utf-8").trim().split("\n");
-  return input;
-};
+async function readInput(inputPath) {
+  const input = await fs.promises.readFile(inputPath, "utf-8");
+  return input.trim().split("\n");
+}
 
 function getVowelCount(str) {
   var m = str.match(/[aeiou]/gi);
@@ -68,8 +68,11 @@ async function run() {
   const addressFile = process.argv[2];
   const driverFile = process.argv[3];
 
-  let drivers = readInput(driverFile);
-  let addresses = readInput(addressFile);
+  let [drivers, addresses] = await Promise.all([
+    readInput(driverFile),
+    readInput(addressFile)
+  ]);
+
   const assignments = {};
   let totalSuitabilityScore = 0;
 
