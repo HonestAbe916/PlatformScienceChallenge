@@ -63,8 +63,8 @@ function getBestDriver(address, drivers) {
 }
 
 async function run() {
-  const driverFile = process.argv[2];
-  const addressFile = process.argv[3];
+  const addressFile = process.argv[2];
+  const driverFile = process.argv[3];
 
   let drivers = readInput(driverFile);
   const addresses = readInput(addressFile);

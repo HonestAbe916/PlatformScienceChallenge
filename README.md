@@ -1,3 +1,3 @@
 # PlatformScienceChallenge
 
-To run "node index.js DriverNames.txt StreetAddresses.txt"
+To run "node index.js StreetAddresses.txt DriverNames.txt"
