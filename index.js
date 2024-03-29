@@ -48,18 +48,20 @@ function getSuitabilityScore(address, driver) {
   return score;
 }
 
-function getBestDriver(address, drivers) {
+function getBestMatch(drivers, addresses) {
   let bestScore = 0;
-  let bestDriver = null;
-  for (let i = 0; i < drivers.length; i++) {
-    const score = getSuitabilityScore(address, drivers[i]);
-    if (score > bestScore) {
-      bestDriver = drivers[i];
-      bestScore = score;
-    }
-  }
+  let bestMatch = null;
+  drivers.forEach((driver) => {
+    addresses.forEach((address) => {
+      const score = getSuitabilityScore(address, driver);
+      if (score > bestScore) {
+        bestScore = score;
+        bestMatch = { address, driver };
+      }
+    });
+  });
 
-  return { score: bestScore, driver: bestDriver };
+  return { score: bestScore, match: bestMatch };
 }
 
 async function run() {
@@ -67,19 +69,21 @@ async function run() {
   const driverFile = process.argv[3];
 
   let drivers = readInput(driverFile);
-  const addresses = readInput(addressFile);
+  let addresses = readInput(addressFile);
   const assignments = {};
   let totalSuitabilityScore = 0;
 
-  // assign each address to best matching driver
-  addresses.forEach((address) => {
-    const res = getBestDriver(address, drivers);
-    assignments[address] = [res.driver, res.score];
-    totalSuitabilityScore += res.score;
+  while (addresses.length) {
+    const { score, match } = getBestMatch(drivers, addresses);
+    const { address, driver } = match;
 
-    // remove driver from list of available drivers
-    drivers = drivers.filter((d) => d !== res.driver);
-  });
+    assignments[address] = [driver, score];
+    totalSuitabilityScore += score;
+
+    // remove assigned driver and address from list
+    drivers = drivers.filter((d) => d !== driver);
+    addresses = addresses.filter((a) => a !== address);
+  }
 
   console.log({ assignments, totalSuitabilityScore });
 }
