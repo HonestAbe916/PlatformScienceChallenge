@@ -38,7 +38,7 @@ function getSuitabilityScore(address, driver) {
   if (streetAddress.length % 2 == 0) {
     score = getVowelCount(driver) * 1.5;
   } else {
-    score = getConsonants(driver) * 1;
+    score = getConsonants(driver);
   }
 
   if (hasCommonFactors(streetAddress.length, driver.length)) {
@@ -48,20 +48,52 @@ function getSuitabilityScore(address, driver) {
   return score;
 }
 
-function getBestMatch(drivers, addresses) {
+function getBestPossibility(senerios) {
   let bestScore = 0;
   let bestMatch = null;
-  drivers.forEach((driver) => {
-    addresses.forEach((address) => {
-      const score = getSuitabilityScore(address, driver);
-      if (score > bestScore) {
-        bestScore = score;
-        bestMatch = { address, driver };
-      }
+  senerios.forEach((senerio) => {
+    let senerioScore = 0;
+    senerio.forEach((assignment) => {
+      senerioScore += getSuitabilityScore(
+        assignment.address,
+        assignment.driver
+      );
     });
+
+    if (senerioScore > bestScore) {
+      bestScore = senerioScore;
+      bestMatch = senerio;
+    }
   });
 
-  return { score: bestScore, match: bestMatch };
+  return { totalSuitabilityScore: bestScore, assignments: bestMatch };
+}
+
+function getArrayCombinations(array) {
+  const combinations = [];
+  if (array.length === 0) {
+    return [[]];
+  }
+  for (let i = 0; i < array.length; i++) {
+    const currentElement = array[i];
+    const remainingElements = array.slice(0, i).concat(array.slice(i + 1));
+    const remainingCombinations = getArrayCombinations(remainingElements);
+    for (let j = 0; j < remainingCombinations.length; j++) {
+      combinations.push([currentElement].concat(remainingCombinations[j]));
+    }
+  }
+  return combinations;
+}
+
+function getAllPossibilites(addresses, drivers) {
+  const senerios = getArrayCombinations(drivers);
+  return senerios.map((driverList) => {
+    const assignment = [];
+    for (let i = 0; i < addresses.length; i++) {
+      assignment.push({ driver: driverList[i], address: addresses[i], score: getSuitabilityScore(addresses[i], driverList[i]) });
+    }
+    return assignment;
+  });
 }
 
 async function run() {
@@ -70,25 +102,12 @@ async function run() {
 
   let [drivers, addresses] = await Promise.all([
     readInput(driverFile),
-    readInput(addressFile)
+    readInput(addressFile),
   ]);
 
-  const assignments = {};
-  let totalSuitabilityScore = 0;
-
-  while (addresses.length) {
-    const { score, match } = getBestMatch(drivers, addresses);
-    const { address, driver } = match;
-
-    assignments[address] = [driver, score];
-    totalSuitabilityScore += score;
-
-    // remove assigned driver and address from list
-    drivers = drivers.filter((d) => d !== driver);
-    addresses = addresses.filter((a) => a !== address);
-  }
-
-  console.log({ assignments, totalSuitabilityScore });
+  const possibilites = getAllPossibilites(addresses, drivers);
+  const best = getBestPossibility(possibilites);
+  console.log(best);
 }
 
 run();
