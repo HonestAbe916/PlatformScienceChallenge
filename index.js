@@ -89,7 +89,7 @@ async function run() {
   const formattedResults = results.assignments.map((driverIndex, index) => {
     return { address: addresses[index], driver: drivers[driverIndex], score: getSuitabilityScore(addresses[index], drivers[driverIndex]) }
   });
-  console.log(formattedResults)
+  console.log({ assignments: formattedResults, score:-results.assignmentsWeight});
 }
 
 run();
