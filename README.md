@@ -1,3 +1,4 @@
 # PlatformScienceChallenge
 
-To run "node index.js StreetAddresses.txt DriverNames.txt"
+To run 
+npm install and then npm run

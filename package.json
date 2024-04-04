@@ -1,0 +1,15 @@
+{
+  "name": "platform-science",
+  "version": "1.0.0",
+  "description": "To run \"node index.js StreetAddresses.txt DriverNames.txt\"",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js StreetAddresses.txt DriverNames.txt"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "munkres-algorithm": "^1.0.2"
+  }
+}

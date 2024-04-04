@@ -1,4 +1,5 @@
 const fs = require("fs");
+const munkresAlgorithm = require('munkres-algorithm');
 
 async function readInput(inputPath) {
   const input = await fs.promises.readFile(inputPath, "utf-8");
@@ -36,11 +37,15 @@ function getSuitabilityScore(address, driver) {
   const streetAddress = parseStreetAddress(address);
   let score = 0;
   if (streetAddress.length % 2 == 0) {
+    // the base SS is the number of vowels in the driver’s name multiplied by 1.5.
     score = getVowelCount(driver) * 1.5;
   } else {
+    // the base SS is the number of consonants in the driver’s name multiplied by 1.
     score = getConsonants(driver);
   }
 
+  // If the length of the shipment's destination street name shares 
+  // any commonfactors with the length of the driver’s name, the SS is increased by 50%
   if (hasCommonFactors(streetAddress.length, driver.length)) {
     score = score += score / 2;
   }
@@ -48,52 +53,25 @@ function getSuitabilityScore(address, driver) {
   return score;
 }
 
-function getBestPossibility(senerios) {
-  let bestScore = 0;
-  let bestMatch = null;
-  senerios.forEach((senerio) => {
-    let senerioScore = 0;
-    senerio.forEach((assignment) => {
-      senerioScore += getSuitabilityScore(
-        assignment.address,
-        assignment.driver
-      );
-    });
-
-    if (senerioScore > bestScore) {
-      bestScore = senerioScore;
-      bestMatch = senerio;
-    }
-  });
-
-  return { totalSuitabilityScore: bestScore, assignments: bestMatch };
-}
-
-function getArrayCombinations(array) {
-  const combinations = [];
-  if (array.length === 0) {
-    return [[]];
-  }
-  for (let i = 0; i < array.length; i++) {
-    const currentElement = array[i];
-    const remainingElements = array.slice(0, i).concat(array.slice(i + 1));
-    const remainingCombinations = getArrayCombinations(remainingElements);
-    for (let j = 0; j < remainingCombinations.length; j++) {
-      combinations.push([currentElement].concat(remainingCombinations[j]));
+/**
+ * generates list mapping [address][driver]=score
+ */
+function createMatrix(addresses, drivers) {
+  let costMatrix = [];
+  // we need matrix to be same number of cols and rows so setting invalid combinations to 0 so they wont be selected
+  const max = drivers.length > addresses.length ? drivers.length : addresses.length; 
+  for (let i = 0; i < max; ++i) {
+    for (let j = 0; j < max; ++j) {
+      if (!costMatrix[i]) costMatrix[i] = [];
+      if (!addresses[j] || !drivers[i]) {
+        costMatrix[i][j] = 0;
+      } else {
+        costMatrix[i][j] = -getSuitabilityScore(addresses[i], drivers[j]);
+      }
     }
   }
-  return combinations;
-}
 
-function getAllPossibilites(addresses, drivers) {
-  const senerios = getArrayCombinations(drivers);
-  return senerios.map((driverList) => {
-    const assignment = [];
-    for (let i = 0; i < addresses.length; i++) {
-      assignment.push({ driver: driverList[i], address: addresses[i], score: getSuitabilityScore(addresses[i], driverList[i]) });
-    }
-    return assignment;
-  });
+  return costMatrix;
 }
 
 async function run() {
@@ -105,9 +83,13 @@ async function run() {
     readInput(addressFile),
   ]);
 
-  const possibilites = getAllPossibilites(addresses, drivers);
-  const best = getBestPossibility(possibilites);
-  console.log(best);
+  const matrix = createMatrix(addresses, drivers);
+  // Uses the Hungarian algorithm to caluclate optimal configuration
+  const results = munkresAlgorithm.minWeightAssign(matrix);
+  const formattedResults = results.assignments.map((driverIndex, index) => {
+    return { address: addresses[index], driver: drivers[driverIndex], score: getSuitabilityScore(addresses[index], drivers[driverIndex]) }
+  });
+  console.log(formattedResults)
 }
 
 run();
