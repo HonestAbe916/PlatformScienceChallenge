@@ -1,5 +1,5 @@
 const fs = require("fs");
-const munkresAlgorithm = require('munkres-algorithm');
+const munkresAlgorithm = require("munkres-algorithm");
 
 async function readInput(inputPath) {
   const input = await fs.promises.readFile(inputPath, "utf-8");
@@ -44,7 +44,7 @@ function getSuitabilityScore(address, driver) {
     score = getConsonants(driver);
   }
 
-  // If the length of the shipment's destination street name shares 
+  // If the length of the shipment's destination street name shares
   // any commonfactors with the length of the driver’s name, the SS is increased by 50%
   if (hasCommonFactors(streetAddress.length, driver.length)) {
     score = score += score / 2;
@@ -59,7 +59,8 @@ function getSuitabilityScore(address, driver) {
 function createMatrix(addresses, drivers) {
   let costMatrix = [];
   // we need matrix to be same number of cols and rows so setting invalid combinations to 0 so they wont be selected
-  const max = drivers.length > addresses.length ? drivers.length : addresses.length; 
+  const max =
+    drivers.length > addresses.length ? drivers.length : addresses.length;
   for (let i = 0; i < max; ++i) {
     for (let j = 0; j < max; ++j) {
       if (!costMatrix[i]) costMatrix[i] = [];
@@ -87,9 +88,16 @@ async function run() {
   // Uses the Hungarian algorithm to caluclate optimal configuration
   const results = munkresAlgorithm.minWeightAssign(matrix);
   const formattedResults = results.assignments.map((driverIndex, index) => {
-    return { address: addresses[index], driver: drivers[driverIndex], score: getSuitabilityScore(addresses[index], drivers[driverIndex]) }
+    return {
+      address: addresses[index],
+      driver: drivers[driverIndex],
+      score: getSuitabilityScore(addresses[index], drivers[driverIndex]),
+    };
   });
-  console.log({ assignments: formattedResults, score:-results.assignmentsWeight});
+  console.log({
+    assignments: formattedResults,
+    score: -results.assignmentsWeight,
+  });
 }
 
 run();
