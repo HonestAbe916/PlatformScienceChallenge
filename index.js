@@ -11,7 +11,7 @@ function getVowelCount(str) {
   return m === null ? 0 : m.length;
 }
 
-function getConsonants(str) {
+function getConsonantsCount(str) {
   return str.split("").filter((e) => e.match(/[^aeiou]/) != null).length;
 }
 
@@ -41,7 +41,7 @@ function getSuitabilityScore(address, driver) {
     score = getVowelCount(driver) * 1.5;
   } else {
     // the base SS is the number of consonants in the driver’s name multiplied by 1.
-    score = getConsonants(driver);
+    score = getConsonantsCount(driver);
   }
 
   // If the length of the shipment's destination street name shares
@@ -56,23 +56,23 @@ function getSuitabilityScore(address, driver) {
 /**
  * generates list mapping [address][driver]=score
  */
-function createMatrix(addresses, drivers) {
-  let costMatrix = [];
+function createScoreMatrix(addresses, drivers) {
+  let scoreMatrix = [];
   // we need matrix to be same number of cols and rows so setting invalid combinations to 0 so they wont be selected
   const max =
     drivers.length > addresses.length ? drivers.length : addresses.length;
   for (let i = 0; i < max; ++i) {
     for (let j = 0; j < max; ++j) {
-      if (!costMatrix[i]) costMatrix[i] = [];
+      if (!scoreMatrix[i]) scoreMatrix[i] = [];
       if (!addresses[j] || !drivers[i]) {
-        costMatrix[i][j] = 0;
+        scoreMatrix[i][j] = 0;
       } else {
-        costMatrix[i][j] = -getSuitabilityScore(addresses[i], drivers[j]);
+        scoreMatrix[i][j] = -getSuitabilityScore(addresses[i], drivers[j]);
       }
     }
   }
 
-  return costMatrix;
+  return scoreMatrix;
 }
 
 async function run() {
@@ -84,9 +84,9 @@ async function run() {
     readInput(addressFile),
   ]);
 
-  const matrix = createMatrix(addresses, drivers);
+  const scoreMatrix = createScoreMatrix(addresses, drivers);
   // Uses the Hungarian algorithm to caluclate optimal configuration
-  const results = munkresAlgorithm.minWeightAssign(matrix);
+  const results = munkresAlgorithm.minWeightAssign(scoreMatrix);
   const formattedResults = results.assignments.map((driverIndex, index) => {
     return {
       address: addresses[index],
